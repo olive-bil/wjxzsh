@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>卡密验证系统</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            color: #333;
+        }
+        
+        .container {
+            width: 100%;
+            max-width: 500px;
+            animation: fadeIn 0.8s ease-out;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            color: white;
+        }
+        
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            font-weight: 600;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+        }
+        
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.25);
+        }
+        
+        .form-group {
+            margin-bottom: 25px;
+            position: relative;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #555;
+            font-size: 1rem;
+        }
+        
+        .input-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+        
+        .input-icon {
+            position: absolute;
+            left: 15px;
+            color: #6a11cb;
+            font-size: 1.2rem;
+            transition: color 0.3s ease;
+        }
+        
+        .input-field {
+            width: 100%;
+            padding: 15px 15px 15px 50px;
+            border: 2px solid #e1e5f1;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            transition: all 0.3s ease;
+            outline: none;
+            background-color: #f8f9fd;
+        }
+        
+        .input-field:focus {
+            border-color: #6a11cb;
+            box-shadow: 0 0 0 3px rgba(106, 17, 203, 0.1);
+            background-color: white;
+        }
+        
+        .input-field:focus + .input-icon {
+            color: #2575fc;
+        }
+        
+        .form-hint {
+            display: flex;
+            align-items: center;
+            margin-top: 8px;
+            font-size: 0.9rem;
+            color: #777;
+        }
+        
+        .form-hint i {
+            margin-right: 6px;
+            font-size: 0.8rem;
+        }
+        
+        .submit-btn {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(to right, #6a11cb, #2575fc);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .submit-btn:hover {
+            background: linear-gradient(to right, #5a0db5, #1c68e8);
+            transform: translateY(-2px);
+            box-shadow: 0 7px 15px rgba(106, 17, 203, 0.3);
+        }
+        
+        .submit-btn:active {
+            transform: translateY(0);
+        }
+        
+        .submit-btn i {
+            margin-left: 8px;
+            transition: transform 0.3s ease;
+        }
+        
+        .submit-btn:hover i {
+            transform: translateX(5px);
+        }
+        
+        .result-container {
+            margin-top: 30px;
+            overflow: hidden;
+            max-height: 0;
+            opacity: 0;
+            transition: all 0.5s ease;
+        }
+        
+        .result-container.show {
+            max-height: 400px;
+            opacity: 1;
+        }
+        
+        .result-card {
+            background: #f8f9fd;
+            border-radius: 12px;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            border-left: 5px solid #6a11cb;
+            animation: slideIn 0.5s ease-out;
+        }
+        
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(-20px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        
+        .result-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-right: 15px;
+            font-size: 1.5rem;
+            flex-shrink: 0;
+        }
+        
+        .success .result-icon {
+            background-color: rgba(46, 204, 113, 0.15);
+            color: #2ecc71;
+        }
+        
+        .error .result-icon {
+            background-color: rgba(231, 76, 60, 0.15);
+            color: #e74c3c;
+        }
+        
+        .result-text h3 {
+            font-size: 1.2rem;
+            margin-bottom: 5px;
+        }
+        
+        .result-text p {
+            color: #666;
+            line-height: 1.5;
+        }
+        
+        .countdown {
+            display: inline-block;
+            background: #2ecc71;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 4px;
+            margin: 0 3px;
+            font-weight: bold;
+            min-width: 30px;
+            text-align: center;
+        }
+        
+        .redirect-link {
+            display: inline-block;
+            margin-top: 10px;
+            color: #2575fc;
+            text-decoration: none;
+            font-weight: 500;
+            border-bottom: 1px dashed #2575fc;
+            padding-bottom: 2px;
+            transition: all 0.2s ease;
+        }
+        
+        .redirect-link:hover {
+            color: #6a11cb;
+            border-bottom-color: #6a11cb;
+        }
+        
+        .skip-button {
+            display: inline-block;
+            margin-left: 10px;
+            padding: 4px 12px;
+            background: #e74c3c;
+            color: white;
+            border-radius: 4px;
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: background 0.2s ease;
+        }
+        
+        .skip-button:hover {
+            background: #c0392b;
+        }
+        
+        .features {
+            margin-top: 30px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+        
+        .feature {
+            display: flex;
+            align-items: center;
+            color: white;
+            opacity: 0.85;
+            font-size: 0.95rem;
+        }
+        
+        .feature i {
+            margin-right: 10px;
+            font-size: 1.2rem;
+        }
+        
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 0.9rem;
+        }
+        
+        .input-success {
+            border-color: #2ecc71 !important;
+            background-color: rgba(46, 204, 113, 0.05) !important;
+        }
+        
+        .input-error {
+            border-color: #e74c3c !important;
+            background-color: rgba(231, 76, 60, 0.05) !important;
+        }
+        
+        .loading {
+            display: none;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+            margin-right: 10px;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .submit-btn.loading .btn-text {
+            margin-left: 10px;
+        }
+        
+        .submit-btn.loading .loading {
+            display: block;
+        }
+        
+        @media (max-width: 600px) {
+            .card {
+                padding: 30px 20px;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .features {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>卡密验证系统</h1>
+            <p>请输入您的卡密以验证并下载文件</p>
+        </div>
+        
+        <div class="card">
+            <form id="keyForm">
+                <div class="form-group">
+                    <label for="keyInput">卡密号码</label>
+                    <div class="input-wrapper">
+                        <i class="input-icon fas fa-key"></i>
+                        <input 
+                            type="text" 
+                            id="keyInput" 
+                            class="input-field" 
+                            placeholder="请输入您的25位卡密号码"
+                            maxlength="25"
+                            autocomplete="off"
+                            spellcheck="false"
+                        >
+                    </div>
+                    <div class="form-hint">
+                        <i class="fas fa-info-circle"></i>
+                        卡密格式: XXXX-XXXX-XXXX-XXXX-XXXX (不区分大小写)
+                    </div>
+                </div>
+                
+                <button type="submit" class="submit-btn" id="submitBtn">
+                    <div class="loading"></div>
+                    <span class="btn-text">验证卡密</span>
+                    <i class="fas fa-arrow-right"></i>
+                </button>
+            </form>
+            
+            <div class="result-container" id="resultContainer">
+                <!-- 结果将动态插入到这里 -->
+            </div>
+        </div>
+        
+        <div class="features">
+            <div class="feature">
+                <i class="fas fa-shield-alt"></i>
+                <span>卡密验证，保障数据安全</span>
+            </div>
+            <div class="feature">
+                <i class="fas fa-bolt"></i>
+                <span>快速验证响应，平均耗时0.5秒</span>
+            </div>
+            <div class="feature">
+                <i class="fas fa-headset"></i>
+                <span>12小时技术支持服务</span>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p>© 2026 MAColiver | 释怀工作室有限公司</p>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.getElementById('keyForm');
+            const keyInput = document.getElementById('keyInput');
+            const submitBtn = document.getElementById('submitBtn');
+            const resultContainer = document.getElementById('resultContainer');
+            
+            // ========================================
+            // 配置部分 - 可以在这里设置跳转的网址
+            // ========================================
+            
+            // 成功验证后的跳转网址（默认）
+        
+            
+            // 跳转倒计时（秒）
+            const REDIRECT_COUNTDOWN = 5;
+            
+            // 有效的密钥数据库（可以在这里添加更多密钥和对应的跳转网址）
+            const validKeys = {
+                // 格式：密钥（不含短横线）: {产品名称, 有效期, 跳转网址}
+                "SH3B8C2D9E1F4G7H6I5JX8Y9Z": {
+                    product: "您的卡密已验证通过！",
+                    expires: "永久",
+                    redirectUrl: "https://internetkj.lanzouq.com/b011lb434h",
+                    customMessage: "即将跳转到下载页面"
+                },
+                
+                "TESTKEY1234567890ABCDEFGHI": {
+                    product: "测试密钥",
+                    expires: "永久",
+                    redirectUrl: "https://olive-bil.github.io/kfzcs/",
+                    customMessage: "测试密钥验证通过，即将进入测试页面"
+                }
+            };
+            
+            // ========================================
+            // 核心功能部分
+            // ========================================
+            
+            // 卡密输入格式化
+            keyInput.addEventListener('input', function(e) {
+                let value = e.target.value.replace(/[^a-zA-Z0-9]/g, '');
+                value = value.toUpperCase();
+                
+                // 每4个字符添加一个短横线
+                let formatted = '';
+                for (let i = 0; i < value.length; i++) {
+                    if (i > 0 && i % 4 === 0) {
+                        formatted += '-';
+                    }
+                    formatted += value[i];
+                }
+                
+                e.target.value = formatted;
+                
+                // 移除之前的验证状态
+                keyInput.classList.remove('input-success', 'input-error');
+            });
+            
+            // 表单提交处理
+            form.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const key = keyInput.value.replace(/-/g, '');
+                
+                // 验证卡密格式
+                if (!isValidKey(key)) {
+                    showError('卡密格式错误', '请输入有效的25位卡密号码，格式为XXXX-XXXX-XXXX-XXXX-XXXX');
+                    keyInput.classList.add('input-error');
+                    return;
+                }
+                
+                // 显示加载状态
+                submitBtn.classList.add('loading');
+                submitBtn.disabled = true;
+                
+                // 模拟API请求延迟
+                setTimeout(() => {
+                    const keyData = validKeys[key];
+                    const isValid = keyData !== undefined;
+                    
+                    // 移除加载状态
+                    submitBtn.classList.remove('loading');
+                    submitBtn.disabled = false;
+                    
+                    if (isValid) {
+                        // 获取跳转网址（如果密钥有特定的跳转网址则使用，否则使用默认网址）
+                        const redirectUrl = keyData.redirectUrl || DEFAULT_REDIRECT_URL;
+                        
+                        showSuccess(
+                            '卡密验证成功', 
+                            keyData.customMessage || `您的${keyData.product}已激活成功！<br>有效期至：${keyData.expires}`,
+                            redirectUrl
+                        );
+                        keyInput.classList.add('input-success');
+                    } else {
+                        // 随机选择错误原因
+                        const errorReasons = [
+                          '卡密无效，请检查输入是否正确'
+                        ];
+                        const randomReason = errorReasons[Math.floor(Math.random() * errorReasons.length)];
+                        
+                        showError('卡密验证失败', randomReason);
+                        keyInput.classList.add('input-error');
+                    }
+                }, 1500);
+            });
+            
+            // 验证卡密格式
+            function isValidKey(key) {
+                // 25位字母数字组合
+                const keyRegex = /^[A-Z0-9]{25}$/;
+                return keyRegex.test(key);
+            }
+            
+            // 显示成功结果（包含自动跳转）
+            function showSuccess(title, message, redirectUrl) {
+                let countdown = REDIRECT_COUNTDOWN;
+                
+                const resultHtml = `
+                    <div class="result-card success">
+                        <div class="result-icon">
+                            <i class="fas fa-check-circle"></i>
+                        </div>
+                        <div class="result-text">
+                            <h3>${title}</h3>
+                            <p>${message}</p>
+                            <p>
+                                页面将在 <span id="countdown" class="countdown">${countdown}</span> 秒后自动跳转...
+                        
+                            </p>
+                        </div>
+                    </div>
+                `;
+                
+                resultContainer.innerHTML = resultHtml;
+                
+                // 显示结果容器
+                setTimeout(() => {
+                    resultContainer.classList.add('show');
+                }, 10);
+                
+                // 设置倒计时和自动跳转
+                const countdownElement = document.getElementById('countdown');
+                const cancelButton = document.getElementById('cancelRedirect');
+                
+                const countdownInterval = setInterval(() => {
+                    countdown--;
+                    countdownElement.textContent = countdown;
+                    
+                    if (countdown <= 0) {
+                        clearInterval(countdownInterval);
+                        window.location.href = redirectUrl;
+                    }
+                }, 1000);
+                
+                // 取消跳转按钮事件
+                cancelButton.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    clearInterval(countdownInterval);
+                    
+                    // 更新显示文本
+                    const resultText = document.querySelector('.result-text p:last-child');
+                    resultText.innerHTML = `
+                        自动跳转已取消
+                        <br>
+                        <a href="${redirectUrl}" class="redirect-link" target="_blank">手动点击跳转</a>
+                    `;
+                });
+                
+                // 点击"立即跳转"链接时清除倒计时
+                document.querySelector('.redirect-link').addEventListener('click', function() {
+                    clearInterval(countdownInterval);
+                });
+            }
+            
+            // 显示错误结果
+            function showError(title, message) {
+                resultContainer.innerHTML = `
+                    <div class="result-card error">
+                        <div class="result-icon">
+                            <i class="fas fa-times-circle"></i>
+                        </div>
+                        <div class="result-text">
+                            <h3>${title}</h3>
+                            <p>${message}</p>
+                            <p>
+                            </p>
+                        </div>
+                    </div>
+                `;
+                
+                // 显示结果容器
+                setTimeout(() => {
+                    resultContainer.classList.add('show');
+                }, 10);
+            }
+            
+            // 添加一些示例卡密到输入框提示
+            const exampleKeys = [
+                "5A3B-8C2D-9E1F-4G7H-6I5J",
+                "X7Y3-Z9Q8-P2R1-M4N6-L5K0",
+                "3F8A-9B2C-5D1E-7G4H-6I0J"
+            ];
+            
+            // 随机选择一个示例卡密作为占位符
+            const randomExample = exampleKeys[Math.floor(Math.random() * exampleKeys.length)];
+            keyInput.placeholder = `例如: ${randomExample}`;
+            
+            // 添加键盘快捷键支持
+            document.addEventListener('keydown', function(e) {
+                // Ctrl+Enter 提交表单
+                if (e.ctrlKey && e.key === 'Enter') {
+                    submitBtn.click();
+                }
+                
+                // ESC 清空输入框
+                if (e.key === 'Escape') {
+                    keyInput.value = '';
+                    keyInput.classList.remove('input-success', 'input-error');
+                    resultContainer.classList.remove('show');
+                }
+            });
+            
+            // 添加输入框获取焦点时的动画效果
+            keyInput.addEventListener('focus', function() {
+                this.parentElement.parentElement.style.transform = 'scale(1.02)';
+            });
+            
+            keyInput.addEventListener('blur', function() {
+                this.parentElement.parentElement.style.transform = 'scale(1)';
+            });
+        });
+    </script>
+</body>
+</html>
